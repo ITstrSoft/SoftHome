@@ -1,0 +1,48 @@
+#!/bin/bash 
+#script di controllo connessione a internet 
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/sbin:/root 
+GW=192.168.15.33 
+PAUSE=10 
+MISSED=0 
+j=0 
+ 
+drbdadm disconnect all 
+ 
+while true; 
+        do 
+if (! ping -c 1 -w 1 $GW > /dev/null); then 
+ 
+        if [ $j -eq 1 ]; then 
+                service pacemaker stop 
+                service gfs2 stop 
+                service clvmd stop 
+                service cman stop 
+                drbdadm secondary all 
+                sleep $PAUSE 
+                drbdadm disconnect all 
+                #echo interrompo servizi 
+                j=0 
+                #echo $j 
+        fi 
+ 
+elif (ping -c 1 -w 1 $GW > /dev/null); then 
+ 
+        if [ $j -eq 0 ]; then 
+                sleep 20 
+                drbdadm connect all 
+                sleep $PAUSE 
+                drbdadm primary all 
+                sleep $PAUSE 
+                service cman start 
+                service clvmd start 
+                service gfs2 start 
+                service pacemaker start 
+                #echo avvio i servizi 
+                j=1 
+                #echo $j 
+        fi 
+fi 
+ 
+sleep $PAUSE 
+ 
+done
