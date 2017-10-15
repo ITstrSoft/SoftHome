@@ -1,0 +1,45 @@
+#! /bin/sh 
+#demone di monitor connessione 
+#Strozzi Internet Connection Monitor Daemon 
+. /etc/rc.d/init.d/functions 
+ 
+# Source networking configuration. 
+. /etc/sysconfig/network 
+ 
+STRICM="/usr/sbin/stricm &" 
+ 
+[ -f /usr/sbin/stricm ] || exit 0 
+ 
+RETVAL=0 
+ 
+# See how we were called. 
+case "$1" in 
+  start) 
+                echo -n "Starting Internet connection monitor Str: " 
+                daemon $NICELEVEL $STRICM 
+                RETVAL=$? 
+                echo 
+                [ $RETVAL = 0 ] && touch /var/lock/subsys/stricm 
+                ;; 
+  stop) 
+                echo -n "Stopping Internet connection monitor: " 
+                killproc stricm 
+                RETVAL=$? 
+                echo 
+                [ $RETVAL = 0 ] && rm -f /var/lock/subsys/stricm 
+                ;; 
+  restart) 
+                $0 stop 
+                $0 start 
+                RETVAL=$? 
+                ;; 
+  status) 
+                status stricm 
+                RETVAL=$? 
+                ;; 
+  *) 
+                echo "Usage: $0 {start|stop|restart|status}" 
+                exit 1 
+esac 
+ 
+exit $RETVAL
